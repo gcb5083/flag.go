@@ -19,7 +19,9 @@
             android:id="@+id/textView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Flags Captured: 0"/>
+            android:text="Flags Captured: 0"
+            android:textSize="30sp"
+            android:textColor="@color/colorPrimaryDark"  />
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab"
