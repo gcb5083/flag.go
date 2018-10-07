@@ -3,8 +3,8 @@ from flask import Flask
 app = Flask(__name__)
 
 players = {}
-flags = [[]]
-hints = ""
+flags = [[40.796712][-77.8689215]]
+hints = "-The flag is at the one of the most photographed places on campus."
 
 @app.route('/gps', methods=['POST'])
 def update_score():

@@ -28,6 +28,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
@@ -46,7 +47,7 @@ public class MainMap extends FragmentActivity implements OnMapReadyCallback {
     private GoogleMap lmap;
     private String url = "http://127.0.0.1";
 
-    private double elementlength = 100 / 364567.2;
+    private double elementlength = 500 / 364567.2;
     private int iter = 13;
 
     private static final int STROKE_COLOR = 0x999f87af;
@@ -60,16 +61,19 @@ public class MainMap extends FragmentActivity implements OnMapReadyCallback {
     private String hints = "No Hints Provided.";
     private long playerid;
     private String provider;
-    double latitude; // latitude
-    double longitude; // longitude
+    double latitude;
+    double longitude;
     private boolean canGetLocation;
-    private Location glocation = null;
+    private Location glocation;
+    private Marker marker;
     // The minimum distance to change Updates in meters
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 1;
 
     // The minimum time between updates in milliseconds
     //private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 1; // 60 minute
     private static final long MIN_TIME_BW_UPDATES = 1000 * 1 * 1;
+
+    int[] flag = {3, 4, 0};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,13 +130,15 @@ public class MainMap extends FragmentActivity implements OnMapReadyCallback {
     private final LocationListener listener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
-            Location glocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            glocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
             JSONObject request = new JSONObject();
             try {
                 request.put("location", Long.toString(playerid) + "\t" + Double.toString(glocation.getLatitude()) + "\t" + Double.toString(glocation.getLongitude()));
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+            LatLng latlng = new LatLng(glocation.getLatitude(), glocation.getLongitude());
+            marker.setPosition(latlng);
         }
 
         @Override
@@ -154,24 +160,9 @@ public class MainMap extends FragmentActivity implements OnMapReadyCallback {
     @Override
     public void onMapReady(GoogleMap googleMap) {
         lmap = googleMap;
-        // Set the long click listener as a way to exit the map.
-        //lmap.setOnMapLongClickListener(this);
 
-        LatLng List = new LatLng(40.803845, -77.865218);
-        lmap.addMarker(new MarkerOptions().position(List).title("LIST"));
-        lmap.moveCamera(CameraUpdateFactory.newLatLng(List));
-        lmap.moveCamera(CameraUpdateFactory.zoomTo(8.0f));
-
-        LocationProvider provider = locationManager.getProvider(LocationManager.GPS_PROVIDER);
-        // Add a marker in Sydney and move the camera
-        /*LatLng stateCollege = new LatLng(40.8, -77.86);
-        lmap.addMarker(new MarkerOptions().position(stateCollege).title("State College, PA"));
-        lmap.moveCamera(CameraUpdateFactory.newLatLng(stateCollege));
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            return;
-        }
-        lmap.setMyLocationEnabled(true);*/
+        glocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        marker = lmap.addMarker(new MarkerOptions().position(new LatLng(glocation.getLatitude(), glocation.getLongitude())).title("Location"));
 
         coordinates[0] = 40.8;
         coordinates[1] = -77.86;
@@ -179,7 +170,7 @@ public class MainMap extends FragmentActivity implements OnMapReadyCallback {
         Log.d("LAT", Double.toString(coordinates[0]));
         Log.d("LONG", Double.toString(coordinates[1]));
         LatLng location = new LatLng(coordinates[0], coordinates[1]);
-        hexagons = plotHexMesh(coordinates, 10);
+        hexagons = plotHexMesh(coordinates, 5);
         lmap.moveCamera(CameraUpdateFactory.newLatLng(location));
         lmap.setMaxZoomPreference(18);
         lmap.setMinZoomPreference(14);
@@ -202,7 +193,7 @@ public class MainMap extends FragmentActivity implements OnMapReadyCallback {
         int scalefactor = 1000;
         hexagons = new HashMap<LatLng, Polygon>();
         double[] center;
-        Polygon centerhex = lmap.addPolygon(new PolygonOptions().clickable(true).fillColor(ACTIVE_COLOR).
+        Polygon centerhex = lmap.addPolygon(new PolygonOptions().clickable(true).fillColor(FILL_COLOR).
                 strokeWidth(STROKE_WIDTH).strokeColor(STROKE_COLOR).add (
                 new LatLng(city[0] + elementlength * Math.pow(3, 0.5), city[1] + elementlength),
                 new LatLng(city[0], city[1] + elementlength * 2),
@@ -216,14 +207,27 @@ public class MainMap extends FragmentActivity implements OnMapReadyCallback {
             for (int side = 0; side < 6; side ++) {
                 for (double hexagon = 0; hexagon < shell - 1; hexagon ++) {
                     center = findCenter(city, elementlength * Math.pow(3, 0.5) / 2, shell, side, hexagon);
-                    Polygon cityhex = lmap.addPolygon(new PolygonOptions().clickable(true).fillColor(FILL_COLOR).
-                            strokeWidth(STROKE_WIDTH).strokeColor(STROKE_COLOR).add(
-                            new LatLng(center[0] + elementlength * Math.pow(3, 0.5), center[1] + elementlength),
-                            new LatLng(center[0], center[1] + elementlength * 2),
-                            new LatLng(center[0] - elementlength * Math.pow(3, 0.5), center[1] + elementlength),
-                            new LatLng(center[0] - elementlength * Math.pow(3, 0.5), center[1] - elementlength),
-                            new LatLng(center[0], center[1] - elementlength * 2),
-                            new LatLng(center[0] + elementlength * Math.pow(3, 0.5), center[1] - elementlength)));
+                    Polygon cityhex = null;
+                    if (shell == flag[0] && side == flag[1] && hexagon == flag[2]) {
+                         cityhex = lmap.addPolygon(new PolygonOptions().clickable(true).fillColor(ACTIVE_COLOR).
+                                strokeWidth(STROKE_WIDTH).strokeColor(STROKE_COLOR).add(
+                                new LatLng(center[0] + elementlength * Math.pow(3, 0.5), center[1] + elementlength),
+                                new LatLng(center[0], center[1] + elementlength * 2),
+                                new LatLng(center[0] - elementlength * Math.pow(3, 0.5), center[1] + elementlength),
+                                new LatLng(center[0] - elementlength * Math.pow(3, 0.5), center[1] - elementlength),
+                                new LatLng(center[0], center[1] - elementlength * 2),
+                                new LatLng(center[0] + elementlength * Math.pow(3, 0.5), center[1] - elementlength)));
+                    }
+                    else {
+                        cityhex = lmap.addPolygon(new PolygonOptions().clickable(true).fillColor(FILL_COLOR).
+                                strokeWidth(STROKE_WIDTH).strokeColor(STROKE_COLOR).add(
+                                new LatLng(center[0] + elementlength * Math.pow(3, 0.5), center[1] + elementlength),
+                                new LatLng(center[0], center[1] + elementlength * 2),
+                                new LatLng(center[0] - elementlength * Math.pow(3, 0.5), center[1] + elementlength),
+                                new LatLng(center[0] - elementlength * Math.pow(3, 0.5), center[1] - elementlength),
+                                new LatLng(center[0], center[1] - elementlength * 2),
+                                new LatLng(center[0] + elementlength * Math.pow(3, 0.5), center[1] - elementlength)));
+                    }
                     hexagons.put(getCenter(cityhex.getPoints()),cityhex);
                 }
 
