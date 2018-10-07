@@ -84,12 +84,63 @@ public class MainMap extends FragmentActivity implements OnMapReadyCallback {
 
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 5, listener);
+        glocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
-        playerid = (long) (Math.random() * 1000000000) + 1000000000;
+        playerid = (long) (Math.random() * 10000000) + 10000000;
 
         textview = findViewById(R.id.textView);
 
         queue = Volley.newRequestQueue(this);
+
+        JSONObject onerequest = new JSONObject();
+        try {
+            onerequest.put("playerID", Long.toString(playerid));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        JsonObjectRequest idRequest = new JsonObjectRequest(Request.Method.POST, url + "/playerid", onerequest,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        return;
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+            }
+        });
+
+        queue.add(idRequest);
+
+        JSONObject request = new JSONObject();
+        try {
+            request.put("location",
+                    Long.toString(playerid) +
+                            '|' + Double.toString(glocation.getLatitude()) +
+                            '|' + Double.toString(glocation.getLongitude()));
+        } catch (JSONException e) {
+            Log.d("LOGY", "LOGY");
+            e.printStackTrace();
+        }
+
+        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url + "/gps", request,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        String scorestring = "";
+                        scorestring = response.toString();
+                        scorestring = scorestring.split("---")[1];
+                        scorestring = scorestring.split("---")[0];
+                        score = Integer.parseInt(scorestring);
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+            }
+        });
+
+        queue.add(postRequest);
 
         JSONObject empty = new JSONObject();
         try {
@@ -133,15 +184,14 @@ public class MainMap extends FragmentActivity implements OnMapReadyCallback {
         @Override
         public void onLocationChanged(Location location) {
             glocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            JSONObject request = new JSONObject();
+            JSONObject request2 = new JSONObject();
             try {
-                request.put("location", Long.toString(playerid) + "\t" + Double.toString(glocation.getLatitude()) + "\t" + Double.toString(glocation.getLongitude()));
+                request2.put("location", Long.toString(playerid) + '|' + Double.toString(glocation.getLatitude()) + '|' + Double.toString(glocation.getLongitude()));
             } catch (JSONException e) {
-                Log.d("1113", "1113");
                 e.printStackTrace();
             }
 
-            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url + "/gps", request,
+            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url + "/gps", request2,
                     new Response.Listener<JSONObject>() {
                         @Override
                         public void onResponse(JSONObject response) {
@@ -159,7 +209,7 @@ public class MainMap extends FragmentActivity implements OnMapReadyCallback {
 
             queue.add(postRequest);
 
-            textview.setText(("Score: " + Integer.toString(score)));
+            textview.setText(("Flags Captured: " + Integer.toString(score)));
 
             LatLng latlng = new LatLng(glocation.getLatitude(), glocation.getLongitude());
             marker.setPosition(latlng);
