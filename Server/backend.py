@@ -24,7 +24,7 @@ def update_score():
 		x = float(lat) - flags[i][0]
 		y = float(lng) - flags[i][1]
 		distance = math.sqrt(x**2 + y**2)
-		if distance <= (20/364567):
+		if distance <= (700/364567):
 			players[player_id] += 1
 			flags.remove(flag)
 	print(players[player_id])
