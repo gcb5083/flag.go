@@ -15,6 +15,7 @@ import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -45,14 +46,14 @@ public class MainMap extends FragmentActivity implements OnMapReadyCallback {
 
 
     private GoogleMap lmap;
-    private String url = "http://10.42.0.1:5000";
+    private String url = "http://66.71.74.146:5000";
 
     private double elementlength = 500 / 364567.2;
     private int iter = 13;
 
-    private static final int STROKE_COLOR = 0x999f87af;
-    private static final int FILL_COLOR = 0x4488527f;
-    private static final int ACTIVE_COLOR = 0x66fcff6c;
+    private static final int STROKE_COLOR = 0x99000080;
+    private static final int FILL_COLOR = 0x44000080;
+    private static final int ACTIVE_COLOR = 0x66ffffff;
     private static final int STROKE_WIDTH = 3;
     private double[] coordinates = new double[2];
     private HashMap<LatLng, Polygon> hexagons;
@@ -60,18 +61,10 @@ public class MainMap extends FragmentActivity implements OnMapReadyCallback {
     private RequestQueue queue;
     private String hints = "No Hints Provided.";
     private long playerid;
-    private String provider;
-    double latitude;
-    double longitude;
-    private boolean canGetLocation;
     private Location glocation;
     private Marker marker;
-    // The minimum distance to change Updates in meters
-    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 1;
-
-    // The minimum time between updates in milliseconds
-    //private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 1; // 60 minute
-    private static final long MIN_TIME_BW_UPDATES = 1000 * 1 * 1;
+    private TextView textview;
+    private int score = 0;
 
     int[] flag = {3, 4, 0};
 
@@ -94,6 +87,8 @@ public class MainMap extends FragmentActivity implements OnMapReadyCallback {
 
         playerid = (long) (Math.random() * 1000000000) + 1000000000;
 
+        textview = findViewById(R.id.textView);
+
         queue = Volley.newRequestQueue(this);
 
         JSONObject empty = new JSONObject();
@@ -114,7 +109,6 @@ public class MainMap extends FragmentActivity implements OnMapReadyCallback {
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.d("TRACE", error.getMessage());
             }
         });
 
@@ -143,8 +137,30 @@ public class MainMap extends FragmentActivity implements OnMapReadyCallback {
             try {
                 request.put("location", Long.toString(playerid) + "\t" + Double.toString(glocation.getLatitude()) + "\t" + Double.toString(glocation.getLongitude()));
             } catch (JSONException e) {
+                Log.d("1113", "1113");
                 e.printStackTrace();
             }
+
+            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, url + "/gps", request,
+                    new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            String scorestring = "";
+                            scorestring = response.toString();
+                            scorestring = scorestring.split("---")[1];
+                            scorestring = scorestring.split("---")[0];
+                            score = Integer.parseInt(scorestring);
+                        }
+                    }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                }
+            });
+
+            queue.add(postRequest);
+
+            textview.setText(("Score: " + Integer.toString(score)));
+
             LatLng latlng = new LatLng(glocation.getLatitude(), glocation.getLongitude());
             marker.setPosition(latlng);
         }

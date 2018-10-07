@@ -15,7 +15,11 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
 
-
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Flags Captured: 0"  />
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab"
@@ -24,8 +28,10 @@
             android:layout_gravity="end|bottom"
             android:layout_margin="16dp"
             android:src="@drawable/ic_1"
-            android:visibility="visible" />
+            android:visibility="visible"
+            app:backgroundTint="#000080"/>
 
     </FrameLayout>
+
 </LinearLayout>
 

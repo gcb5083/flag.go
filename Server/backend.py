@@ -1,5 +1,4 @@
-from flask import Flask
-from flask import jsonify
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
@@ -14,7 +13,8 @@ def get_playerID():
 @app.route('/gps', methods=['POST'])
 def update_score():
 	content = request.json
-	passeddata = content.split('\t')
+	print(content)
+	passeddata = content["location"].split('\t')
 	passeddata[0] = player_id
 	passeddata[1] = lat
 	passeddata[2] = lng
@@ -26,7 +26,8 @@ def update_score():
 		if distance <= (20/364567):
 			players[player_id] += 1
 			flags.remove(flag)
-	return jsonify({"score":players[player_id]})
+	return jsonify({"score":("---" + 1 + "---")})
+	return jsonify({"score":("---" + players[player_id] + "---")})
 
 @app.route('/hints')
 def get_hints():
