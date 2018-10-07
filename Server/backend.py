@@ -24,9 +24,11 @@ def update_score():
 		x = float(lat) - flags[i][0]
 		y = float(lng) - flags[i][1]
 		distance = math.sqrt(x**2 + y**2)
+		print(700/364567)
+		print(distance)
 		if distance <= (700/364567):
 			players[player_id] += 1
-			flags.remove(flag)
+			del flags[i]
 	print(players[player_id])
 	return jsonify({"score":("---" + str(players[player_id]) + "---")})
 
