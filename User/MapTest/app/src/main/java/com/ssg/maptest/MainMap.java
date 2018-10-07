@@ -45,7 +45,7 @@ public class MainMap extends FragmentActivity implements OnMapReadyCallback {
 
 
     private GoogleMap lmap;
-    private String url = "http://127.0.0.1";
+    private String url = "http://10.42.0.1:5000";
 
     private double elementlength = 500 / 364567.2;
     private int iter = 13;
@@ -90,25 +90,33 @@ public class MainMap extends FragmentActivity implements OnMapReadyCallback {
         }
 
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 5, listener);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 5, listener);
 
         playerid = (long) (Math.random() * 1000000000) + 1000000000;
 
         queue = Volley.newRequestQueue(this);
 
-        JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, url + "/hints", null,
+        JSONObject empty = new JSONObject();
+        try {
+            empty.put("", "");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, url + "/hints", empty,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         hints = response.toString();
+                        hints = hints.split("---")[1];
+                        hints = hints.split("---")[0];
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-
+                Log.d("TRACE", error.getMessage());
             }
-        }) {
-        };
+        });
 
         queue.add(getRequest);
 

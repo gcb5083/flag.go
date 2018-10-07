@@ -1,10 +1,15 @@
 from flask import Flask
+from flask import jsonify
 
 app = Flask(__name__)
 
 players = {}
-flags = [[40.796712][-77.8689215]]
-hints = "-The flag is at the one of the most photographed places on campus."
+flags = [[40.796712, -77.8689215]]
+
+@app.route('/playerID', methods=['POST'])
+def get_playerID():
+	content = request.json
+	players[content] = 0
 
 @app.route('/gps', methods=['POST'])
 def update_score():
@@ -23,6 +28,8 @@ def update_score():
 			flags.remove(flag)
 	return jsonify({"score":players[player_id]})
 
-@app.route('/hints', methods=['GET'])
+@app.route('/hints')
 def get_hints():
-	return jsonify({"score":hints})
+	return jsonify({"hint":"---The flag is at one of the most photographed places on campus.---"})
+
+
